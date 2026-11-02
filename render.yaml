@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: fr-joseph-connolly-school-system
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --workers 1 --threads 4 --timeout 120 --access-logfile - --error-logfile - app:app
+    healthCheckPath: /healthz
+    disk:
+      name: fr-joseph-connolly-school-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: SCHOOL_DB
+        value: /var/data/school.db
+      - key: SCHOOL_UPLOAD_DIR
+        value: /var/data/private_uploads
+      - key: SCHOOL_BACKUP_DIR
+        value: /var/data/backups
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_INITIAL_USERNAME
+        value: admin
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false
+      - key: BACKUP_EMAIL_TO
+        value: glorywaves774@gmail.com
+      - key: BACKUP_ZIP_PASSWORD
+        sync: false

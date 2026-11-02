@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if record_id else 'New' }} {{ cfg.label }} · Fr. Joseph Connolly SVD Memorial School{% endblock %}
+{% block page_heading %}{{ 'Edit' if record_id else 'New' }} {{ cfg.label }} record{% endblock %}
+{% block content %}
+<div class="form-layout"><div class="panel form-panel"><div class="panel-heading"><div><h2>{{ cfg.label }}</h2><p>{{ cfg.description }}</p></div></div>
+<form method="post" enctype="multipart/form-data" class="form-grid"><input type="hidden" name="_csrf" value="{{ csrf_token }}">
+{% if key == 'staff' %}<div class="field field-wide"><label for="passport_photo">Staff passport photograph</label><input id="passport_photo" type="file" name="passport_photo" accept="image/jpeg,image/png,image/webp"><small class="subtle">JPEG, PNG or WebP. Maximum 5 MB. Upload a clear head-and-shoulders photograph.</small>{% if record and record.get('passport_photo_path') %}<img src="{{ url_for('private_passport_photo',photo_path=record.get('passport_photo_path')) }}" alt="Staff passport photograph" class="photo-preview">{% endif %}</div>{% endif %}
+{% for field in fields %}
+<div class="field {% if field.kind == 'textarea' %}field-wide{% endif %}"><label for="{{ field.name }}">{{ field.label }}{% if field.required %} <span class="required">*</span>{% endif %}</label>
+{% if field.kind == 'textarea' %}<textarea id="{{ field.name }}" name="{{ field.name }}" rows="3" {% if field.required %}required{% endif %}>{{ record.get(field.name,'') if record else '' }}</textarea>
+{% elif field.kind == 'select' %}<select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}><option value="">Choose...</option>{% for option in field.options %}{% if option is mapping %}<option value="{{ option.value }}" {% if record and record.get(field.name,'')|string == option.value|string %}selected{% endif %}>{{ option.label }}</option>{% else %}<option value="{{ option }}" {% if record and record.get(field.name,'') == option %}selected{% endif %}>{{ option }}</option>{% endif %}{% endfor %}</select>
+{% elif field.kind == 'student' %}<select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}><option value="">Choose student...</option>{% for option in field.options %}<option value="{{ option.value }}" {% if record and record.get(field.name,'')|string == option.value|string %}selected{% endif %}>{{ option.label }}</option>{% endfor %}</select>
+{% else %}<input id="{{ field.name }}" name="{{ field.name }}" type="{{ field.kind }}" value="{{ record.get(field.name,'') if record else '' }}" {% if field.required %}required{% endif %} {% if field.kind == 'number' %}min="0" step="0.01"{% endif %}>{% endif %}
+</div>{% endfor %}
+<div class="field field-wide form-actions"><button class="button" type="submit">Save record</button><a class="button button-secondary" href="{{ url_for('module_list',key=key) }}">Cancel</a></div>
+</form></div><aside class="panel form-help"><h3>Record handling</h3><p>Entries are stored in the shared school database. Changes are logged for audit review.</p><p>Only authorised roles have access to this module. Sensitive welfare and health records are restricted.</p><p>Fields marked with * are required.</p></aside></div>
+{% endblock %}

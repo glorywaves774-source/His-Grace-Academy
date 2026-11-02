@@ -1,0 +1,36 @@
+{% extends 'base.html' %}{% block title %}Dashboard · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Dashboard overview{% endblock %}{% block content %}
+{% set pct = namespace(male=0, female=0, other=0) %}
+{% if active %}{% set pct.male = genders.Male / active * 100 %}{% set pct.female = genders.Female / active * 100 %}{% set pct.other = (genders.Other + genders.Unspecified) / active * 100 %}{% endif %}
+<div class="welcome-row"><div><h2>Good day, {{ current_user.full_name.split(' ')[0] }}</h2><p class="muted">Your school activity overview. Figures are calculated from the database each time this page opens.</p></div><div class="actions">{% if current_user.role in ['Administrator','Headteacher','Admissions Officer'] %}<a class="btn primary" href="{{ url_for('student_new') }}">＋ Register student</a>{% endif %}<a class="btn secondary" href="{{ url_for('students') }}">View directory</a></div></div>
+
+<div class="stat-grid {{ 'four' if show_fees else 'three' }}">
+  <a class="stat-card" href="{{ url_for('students') }}"><span class="stat-icon blue-bg">♙</span><span class="stat-label">Total students</span><strong>{{ total }}</strong><small>{{ active }} active · {{ genders.Male }} boys · {{ genders.Female }} girls</small></a>
+  <div class="stat-card"><span class="stat-icon green">✓</span><span class="stat-label">Attendance marked today</span><strong>{{ attendance_today }}</strong><small>{% if attendance_today %}{{ present_today }} present or late{% else %}Not yet marked today{% endif %}</small></div>
+  {% if show_fees %}<div class="stat-card"><span class="stat-icon gold-bg">₵</span><span class="stat-label">Fees collected</span><strong>GH₵ {{ '%.2f'|format(fees_month) }}</strong><small>This month, to date</small></div>{% endif %}
+  <div class="stat-card"><span class="stat-icon">＋</span><span class="stat-label">Admissions this month</span><strong>{{ new_this_month }}</strong><small>By admission date, up to today</small></div>
+</div>
+
+{% include '_dash3d.html' %}
+<div class="dashboard-grid">
+  <div class="panel"><div class="panel-head"><div><h3>Active enrolment by class</h3><p class="muted">Active students in each class</p></div><span class="tag">{{ class_count }} classes</span></div>
+    {% set ns = namespace(max_count=0) %}{% for r in class_rows %}{% if r.n > ns.max_count %}{% set ns.max_count = r.n %}{% endif %}{% endfor %}
+    <div class="bar-chart">{% for r in class_rows %}<div class="bar-row">{% if r.id %}<a class="bar-label text-link" href="{{ url_for('students', class_id=r.id, status='Active') }}">{{ r.name }}</a>{% else %}<span class="bar-label">{{ r.name }}</span>{% endif %}<div class="bar-track"><div class="bar-fill{% if not r.id %} unassigned{% endif %}" style="width:{{ (r.n / ns.max_count * 100) if ns.max_count else 0 }}%"></div></div><b>{{ r.n }}</b></div>{% else %}<p class="empty">No class records yet.</p>{% endfor %}</div>
+    <div class="chart-foot">Total shown: {{ class_rows|sum(attribute='n') }} active students{% if unassigned %} · {{ unassigned }} not yet assigned to a class{% endif %}.</div></div>
+
+  <div class="panel"><div class="panel-head"><div><h3>Gender distribution</h3><p class="muted">Active students only</p></div></div>
+    <div class="donut-wrap"><div class="donut" role="img" aria-label="Boys {{ genders.Male }}, girls {{ genders.Female }}" style="background:{% if active %}conic-gradient(var(--brand) 0 {{ pct.male }}%, var(--gold) {{ pct.male }}% {{ pct.male + pct.female }}%, var(--neutral) {{ pct.male + pct.female }}% 100%){% else %}#ece7f1{% endif %}"><span><b>{{ active }}</b>active</span></div>
+    <ul class="legend"><li><i style="background:var(--brand)"></i>Boys <b>{{ genders.Male }}</b></li><li><i style="background:var(--gold)"></i>Girls <b>{{ genders.Female }}</b></li><li><i style="background:var(--neutral)"></i>Other / not recorded <b>{{ genders.Other + genders.Unspecified }}</b></li></ul></div></div>
+</div>
+
+<div class="dashboard-grid even">
+  <div class="panel"><div class="panel-head"><div><h3>Student status</h3><p class="muted">All registered students</p></div></div><div class="status-list">
+    {% for label, count, dot in [('Active', active, 'active-dot'), ('Transferred', transferred, 'transfer-dot'), ('Withdrawn', withdrawn, 'withdrawn-dot'), ('Graduated', graduated, 'grad-dot')] %}<div><span class="status-dot {{ dot }}"></span><a href="{{ url_for('students', status=label) }}">{{ label }}</a><b>{{ count }} <small>({{ '%.0f'|format(count / total * 100) if total else 0 }}%)</small></b></div>{% endfor %}</div></div>
+
+  <div class="panel"><div class="panel-head"><div><h3>Admission trends</h3><p class="muted">New student records by admission month, last 12 months</p></div></div>
+    {% set tmax = namespace(v=0) %}{% for m in month_rows %}{% if m.n > tmax.v %}{% set tmax.v = m.n %}{% endif %}{% endfor %}
+    <div class="column-chart" role="img" aria-label="Admissions per month for the last 12 months">{% for m in month_rows %}<div class="col"><b>{{ m.n }}</b><div class="col-track"><div class="col-fill" style="height:{{ (m.n / tmax.v * 100) if tmax.v else 0 }}%"></div></div><span>{{ m.label[:3] }}<small>{{ m.label[-2:] }}</small></span></div>{% endfor %}</div>
+    {% if not tmax.v %}<p class="chart-foot">No admissions recorded in this period.</p>{% endif %}</div>
+</div>
+
+<div class="panel table-panel"><div class="panel-head"><div><h3>Recently added students</h3><p class="muted">Latest records created in the system</p></div><a class="text-link" href="{{ url_for('students') }}">View all →</a></div><div class="table-wrap"><table><thead><tr><th>Student</th><th>Admission number</th><th>Class</th><th>Admission date</th><th>Status</th><th></th></tr></thead><tbody>{% for s in recent %}<tr><td><div class="student-cell"><span class="student-avatar">{% if s.photo_path %}<img src="{{ url_for('private_passport_photo',photo_path=s.photo_path) }}" alt="">{% else %}{{ s.first_name[0] }}{{ s.last_name[0] }}{% endif %}</span><span><b>{{ s.first_name }} {{ s.last_name }}</b><small>{{ s.gender or 'Gender not recorded' }}</small></span></div></td><td><code>{{ s.admission_no }}</code></td><td>{{ s.class_name or 'Unassigned' }}</td><td>{{ s.admission_date }}</td><td><span class="status-badge {{ s.status|lower }}">{{ s.status }}</span></td><td><a class="text-link" href="{{ url_for('student_detail',student_id=s.id) }}">Open</a></td></tr>{% else %}<tr><td colspan="6" class="empty">No students have been registered yet. Add your first student to populate the dashboard.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

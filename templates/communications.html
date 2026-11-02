@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% block title %}Send messages · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Send messages{% endblock %}{% block content %}
+{% if not sms_ready and not email_ready %}<div class="alert warning">Neither SMS nor email is switched on yet. An administrator can see what is missing under Integrations.</div>{% endif %}
+<form method="post" class="panel form-panel narrow"><input type="hidden" name="_csrf" value="{{ csrf_token }}">
+<div class="form-grid">
+<label>Send to<select name="audience"><option value="class" {{ 'selected' if form.audience=='class' }}>Guardians of one class</option><option value="all" {{ 'selected' if form.audience=='all' }}>All guardians</option><option value="owing" {{ 'selected' if form.audience=='owing' }}>Guardians with unpaid fees</option><option value="student" {{ 'selected' if form.audience=='student' }}>One student's guardian</option><option value="staff" {{ 'selected' if form.audience=='staff' }}>All staff</option></select></label>
+<label>Class (for class or unpaid fees)<select name="class_name"><option value="">All classes</option>{% for c in classes %}<option {{ 'selected' if form.class_name==c }}>{{ c }}</option>{% endfor %}</select></label>
+<label>Student (for one student)<select name="student_id"><option value="">Choose…</option>{% for s in students %}<option value="{{ s.id }}" {{ 'selected' if form.student_id==s.id|string }}>{{ s.last_name }}, {{ s.first_name }} · {{ s.admission_no }}</option>{% endfor %}</select></label>
+<label>How<select name="channel"><option value="sms" {{ 'selected' if form.channel=='sms' }}>SMS</option><option value="email" {{ 'selected' if form.channel=='email' }}>Email</option><option value="both" {{ 'selected' if form.channel=='both' }}>SMS and email</option></select></label>
+<label class="span-2">Email subject<input name="subject" maxlength="150" value="{{ form.subject }}"></label>
+<label class="span-2">Message (up to 600 characters)<textarea name="message" rows="5" maxlength="600" required>{{ form.message }}</textarea><small>You can use {student} {guardian} {class} {balance} {school}. A parent with several children gets one message.</small></label>
+</div>
+{% if preview %}<div class="panel"><h3>Preview</h3><p>{{ preview.people }} people in this group · <b>{{ preview.sms }}</b> with a valid phone · <b>{{ preview.email }}</b> with a valid email · {{ preview.skipped }} cannot be reached.</p>{% if preview.sample %}<blockquote>{{ preview.sample }}</blockquote><p class="muted">About {{ preview.segments }} SMS part(s) per message. Most senders charge per part.</p>{% endif %}
+<label class="check"><input type="checkbox" name="confirm" value="yes"> I have checked the preview and want to send this now.</label></div>{% endif %}
+<div class="form-actions"><button class="btn ghost" name="action" value="preview">Preview</button><button class="btn primary" name="action" value="send">Send</button></div>
+<p class="muted">Sending is limited to {{ max_recipients }} people at a time.</p></form>{% endblock %}

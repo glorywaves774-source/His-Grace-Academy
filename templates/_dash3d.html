@@ -1,0 +1,22 @@
+{# 3D view of enrolment (and, for fee roles, fees) by class. Data is in the attribute below; the script lives in a separate file. #}
+<div class="panel d3-panel" data-d3-panel data-scene="{{ scene_json }}">
+  <div class="panel-head"><div><h3>3D class view</h3><p class="muted">Drag to rotate, scroll or pinch to zoom, hover or tap a column for exact numbers.</p></div>
+    <div class="d3-controls" role="toolbar" aria-label="3D view controls">
+      <span class="d3-seg" role="group" aria-label="What to show"><button type="button" class="d3-btn" data-d3-mode="enrol" aria-pressed="true">Enrolment</button>{% if show_fees and scene.fees|length %}<button type="button" class="d3-btn" data-d3-mode="fees" aria-pressed="false">Fees</button>{% endif %}</span>
+      <span class="d3-seg" role="group" aria-label="View"><button type="button" class="d3-btn" data-d3-view="3d" aria-pressed="true">3D</button><button type="button" class="d3-btn" data-d3-view="2d" aria-pressed="false">Table</button></span>
+      <button type="button" class="d3-btn" data-d3-reset>Reset view</button>
+    </div></div>
+  <div class="d3-body">
+    <div class="d3-stage" data-d3-stage hidden></div>
+    <div class="d3-tip" data-d3-tip hidden></div>
+    <p class="d3-legend" data-d3-legend><span data-d3-for="enrol"><i class="d3-sw d3-a"></i>Boys</span><span data-d3-for="enrol"><i class="d3-sw d3-b"></i>Girls</span><span data-d3-for="fees" hidden><i class="d3-sw d3-a"></i>Billed</span><span data-d3-for="fees" hidden><i class="d3-sw d3-ok"></i>Paid</span><span data-d3-for="fees" hidden><i class="d3-sw d3-bad"></i>Outstanding</span></p>
+    <p class="d3-note muted" data-d3-note role="status"></p>
+    <div class="d3-tables" data-d3-table>
+      <div class="table-wrap" data-d3-tablefor="enrol"><table><caption class="d3-cap">Active students by class</caption><thead><tr><th>Class</th><th>Boys</th><th>Girls</th><th>Other</th><th>Total</th></tr></thead><tbody>
+        {% for r in scene.enrol %}<tr><td>{{ r.name }}</td><td>{{ r.boys }}</td><td>{{ r.girls }}</td><td>{{ r.other }}</td><td><b>{{ r.total }}</b></td></tr>{% else %}<tr><td colspan="5" class="empty">No class records yet.</td></tr>{% endfor %}</tbody></table></div>
+      {% if show_fees and scene.fees|length %}<div class="table-wrap" data-d3-tablefor="fees"><table><caption class="d3-cap">Fees by class (all invoices)</caption><thead><tr><th>Class</th><th>Billed (GH₵)</th><th>Paid (GH₵)</th><th>Outstanding (GH₵)</th></tr></thead><tbody>
+        {% for r in scene.fees %}<tr><td>{{ r.name }}</td><td>{{ '%.2f'|format(r.billed) }}</td><td>{{ '%.2f'|format(r.paid) }}</td><td><b>{{ '%.2f'|format(r.outstanding) }}</b></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='dashboard3d.js') }}" defer></script>

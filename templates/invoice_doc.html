@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block title %}Invoice {{ inv.invoice_no }} · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Fee invoice{% endblock %}{% block content %}
+<div class="receipt-actions"><a class="btn ghost" href="{{ url_for('invoices') }}">← Invoices</a><button class="btn primary" data-print>Print invoice</button></div>
+<article class="doc-sheet">{% include '_letterhead.html' %}
+<div class="receipt-title"><h3>FEE INVOICE</h3><span>NO: {{ inv.invoice_no }}</span></div>
+<div class="doc-grid"><div><span>Bill to</span><b>{{ inv.first_name }} {{ inv.last_name }} ({{ inv.admission_no }})</b></div><div><span>Date issued</span><b>{{ issued }}</b></div>
+<div><span>Class</span><b>{{ inv.class_name or 'Not assigned' }}</b></div><div><span>Due date</span><b>{{ inv.due_date }}</b></div>
+<div><span>Parent / guardian</span><b>{{ inv.guardian_name or '—' }}</b></div><div><span>Academic year / term</span><b>{{ inv.academic_year }} / {{ inv.term }}</b></div></div>
+<table class="doc-table"><thead><tr><th>Description</th><th class="num">Amount (GH₵)</th></tr></thead><tbody>
+<tr><td>{{ inv.description }}</td><td class="num">{{ '%.2f'|format(inv.amount) }}</td></tr>
+{% if inv.discount %}<tr><td>Less: discount</td><td class="num">-{{ '%.2f'|format(inv.discount) }}</td></tr>{% endif %}
+<tr class="sub"><td>Total due</td><td class="num">{{ '%.2f'|format(net) }}</td></tr>
+{% for x in pays %}<tr><td>Payment received {{ x.payment_date }} · {{ x.payment_method }} · {{ x.receipt_no }}</td><td class="num">-{{ '%.2f'|format(x.amount) }}</td></tr>{% endfor %}
+</tbody></table>
+<div class="receipt-total"><span>Balance to pay</span><strong>GH₵ {{ '%.2f'|format(balance) }}</strong></div>
+<p class="doc-note">{% if balance <= 0 %}This invoice has been paid in full. Thank you.{% else %}Please pay at the school office or by mobile money, and quote the invoice number <b>{{ inv.invoice_no }}</b> as the purpose of payment so it is applied to this invoice. Keep your receipt.{% endif %}</p>
+<div class="sig-row"><div>Prepared by</div><div>Accountant's signature</div><div>School stamp</div></div>
+</article>{% endblock %}
