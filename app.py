@@ -51,7 +51,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name
 app.config['TEMPLATES_AUTO_RELOAD'] = False
 
 from pwa import register_pwa  # noqa: E402
-PWA_ENDPOINTS = register_pwa(app, name='Fr. Joseph Connolly SVD Memorial School', short_name='FJC School', theme='#6B352A', background='#FFF1A6', description='School management system for Fr. Joseph Connolly SVD Memorial School, Saboba.')
+PWA_ENDPOINTS = register_pwa(app, name='His Grace Academy', short_name='His Grace', theme='#5e3b29', background='#faf8f6', description='School management system for His Grace Academy, Saboba, Northern Region.')
 
 ROLES = ['Administrator','Proprietor','Headteacher','Teacher','Class Teacher','Subject Teacher','Accountant','Admissions Officer','Librarian','Storekeeper','Parent/Guardian','Student']
 
@@ -197,21 +197,7 @@ def init_db():
     default_admin=conn.execute('SELECT id,password_hash FROM users WHERE username=?',('admin',)).fetchone()
     if default_admin and check_password_hash(default_admin[1], 'ChangeMe123!'):
         conn.execute('UPDATE users SET must_change_password=1 WHERE id=?',(default_admin[0],))
-    # This school's classes are Daycare, KG 1, KG 2, Primary 1-6 and JHS 1-3. Older databases used the names
-    # Creche, Nursery and Kindergarten: rename them in place (same class ids) and fix every saved reference.
-    renames = {'Creche': 'Daycare', 'Nursery': 'KG 1', 'Kindergarten': 'KG 2'}
-    for old_name, new_name in renames.items():
-        if conn.execute('SELECT 1 FROM classes WHERE name=?', (old_name,)).fetchone() and not conn.execute('SELECT 1 FROM classes WHERE name=?', (new_name,)).fetchone():
-            conn.execute('UPDATE classes SET name=? WHERE name=?', (new_name, old_name))
-            conn.execute('UPDATE users SET assigned_class=? WHERE assigned_class=?', (new_name, old_name))
-            conn.execute('UPDATE school_records SET class_name=? WHERE class_name=?', (new_name, old_name))
-    for rid, payload in conn.execute("SELECT id,payload_json FROM school_records WHERE payload_json LIKE '%class_name%'").fetchall():
-        try: data = json.loads(payload)
-        except (ValueError, TypeError): continue
-        if isinstance(data, dict) and data.get('class_name') in renames:
-            data['class_name'] = renames[data['class_name']]
-            conn.execute('UPDATE school_records SET payload_json=? WHERE id=?', (json.dumps(data), rid))
-    defaults = ['Daycare','KG 1','KG 2'] + [f'Primary {i}' for i in range(1,7)] + [f'JHS {i}' for i in range(1,4)]
+    defaults = ['Creche','Nursery','KG'] + [f'Primary {i}' for i in range(1,7)] + [f'JHS {i}' for i in range(1,4)]
     for name in defaults:
         conn.execute('INSERT OR IGNORE INTO classes(name) VALUES (?)', (name,))
     # Migrate existing one-child portal accounts into the normalized relationship table.
@@ -229,7 +215,7 @@ def init_db():
     conn.commit(); conn.close()
 
 
-SCHOOL_CODE=''.join(ch for ch in os.environ.get('SCHOOL_CODE','FJC').upper() if ch.isalnum()) or 'FJC'
+SCHOOL_CODE=''.join(ch for ch in os.environ.get('SCHOOL_CODE','HGA').upper() if ch.isalnum()) or 'HGA'
 DASHBOARD_ROLES={'Administrator','Proprietor','Headteacher','Admissions Officer','Class Teacher','Subject Teacher','Teacher'}
 
 def home_url(user=None):
@@ -265,7 +251,7 @@ def _my_children_count():
 
 @app.context_processor
 def inject_globals():
-    return {'home_url': home_url, 'current_user': current_user(), 'my_children_count': _my_children_count(), 'school_name': 'Fr. Joseph Connolly SVD Memorial School', 'today': date.today().isoformat()}
+    return {'home_url': home_url, 'current_user': current_user(), 'my_children_count': _my_children_count(), 'school_name': 'His Grace Academy', 'today': date.today().isoformat()}
 
 
 TEACHER_ROLES={'Class Teacher','Subject Teacher','Teacher'}
@@ -947,7 +933,7 @@ def export_students():
                 value = "'" + value
             safe.append(value)
         writer.writerow(safe)
-    response=make_response('\ufeff'+out.getvalue()); response.headers['Content-Type']='text/csv; charset=utf-8'; response.headers['Content-Disposition']='attachment; filename=kings_gate_students.csv'; audit('export','students',None,f'{len(rows)} records'); return response
+    response=make_response('\ufeff'+out.getvalue()); response.headers['Content-Type']='text/csv; charset=utf-8'; response.headers['Content-Disposition']='attachment; filename=his_grace_students.csv'; audit('export','students',None,f'{len(rows)} records'); return response
 
 @app.route('/fees/new')
 @roles_required('Administrator','Accountant')
@@ -990,13 +976,13 @@ def export_students_xlsx():
     sql+=' ORDER BY s.last_name,s.first_name'; rows=db().execute(sql,args).fetchall()
     wb=Workbook(); ws=wb.active; ws.title='Student records'
     ws.append(['Admission Number','First Name','Last Name','Date of Birth','Gender','Admission Date','Class','Status','Guardian','Guardian Phone'])
-    for cell in ws[1]: cell.font=Font(bold=True,color='FFFFFF'); cell.fill=PatternFill('solid',fgColor='50106E'); cell.alignment=Alignment(horizontal='center')
+    for cell in ws[1]: cell.font=Font(bold=True,color='FFFFFF'); cell.fill=PatternFill('solid',fgColor='5E3B29'); cell.alignment=Alignment(horizontal='center')
     for row in rows: ws.append([row[k] for k in ['admission_no','first_name','last_name','dob','gender','admission_date','class_name','status','guardian_name','guardian_phone']])
     ws.freeze_panes='A2'; ws.auto_filter.ref=ws.dimensions
     for col in ws.columns:
         letter=col[0].column_letter; ws.column_dimensions[letter].width=min(max(max(len(str(c.value or '')) for c in col)+2,14),32)
     out=io.BytesIO(); wb.save(out); out.seek(0); audit('export','students',None,f'XLSX {len(rows)} records')
-    return send_file(out,as_attachment=True,download_name='kings_gate_students.xlsx',mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    return send_file(out,as_attachment=True,download_name='his_grace_students.xlsx',mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/export/students.pdf')
 @roles_required(*STUDENT_ACCESS_ROLES)
@@ -1018,12 +1004,12 @@ def export_students_pdf():
         sql+=f' AND c.name IN {_in(_sc)}'; args+=_sc
     sql+=' ORDER BY s.last_name,s.first_name'; rows=db().execute(sql,args).fetchall()
     out=io.BytesIO(); doc=SimpleDocTemplate(out,pagesize=landscape(A4),rightMargin=24,leftMargin=24,topMargin=24,bottomMargin=24); styles=getSampleStyleSheet()
-    story=[Paragraph('Fr. Joseph Connolly SVD Memorial School',styles['Title']),Paragraph('Student directory report. Faith • Knowledge • Service.',styles['Normal']),Spacer(1,12)]
+    story=[Paragraph('His Grace Academy',styles['Title']),Paragraph('Student directory report. Learn, Grow, Excel!',styles['Normal']),Spacer(1,12)]
     data=[['Admission Number','Student Name','Class','Gender','Admission Date','Status']]
     data += [[str(r[k] or '') for k in ['admission_no','full_name','class_name','gender','admission_date','status']] for r in rows]
-    table=Table(data,repeatRows=1,colWidths=[125,180,100,70,100,75]); table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#50106e')),('TEXTCOLOR',(0,0),(-1,0),colors.white),('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),('GRID',(0,0),(-1,-1),0.35,colors.HexColor('#dddddd')),('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,colors.HexColor('#f6f2fa')]),('FONTSIZE',(0,0),(-1,-1),8),('VALIGN',(0,0),(-1,-1),'TOP')]))
+    table=Table(data,repeatRows=1,colWidths=[125,180,100,70,100,75]); table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#5e3b29')),('TEXTCOLOR',(0,0),(-1,0),colors.white),('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),('GRID',(0,0),(-1,-1),0.35,colors.HexColor('#dddddd')),('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,colors.HexColor('#f6f2fa')]),('FONTSIZE',(0,0),(-1,-1),8),('VALIGN',(0,0),(-1,-1),'TOP')]))
     story.append(table); doc.build(story); out.seek(0); audit('export','students',None,f'PDF {len(rows)} records')
-    return send_file(out,as_attachment=True,download_name='kings_gate_students.pdf',mimetype='application/pdf')
+    return send_file(out,as_attachment=True,download_name='his_grace_students.pdf',mimetype='application/pdf')
 
 IMPORT_COLUMNS = ['Admission Number','First Name','Last Name','Admission Date','Date of Birth','Gender','Class','Nationality','Residential Address','Guardian Name','Guardian Phone','Guardian Email','Guardian Occupation','Guardian Address','Emergency Name','Emergency Phone','Status']
 
@@ -1116,7 +1102,7 @@ def import_template():
     from openpyxl import Workbook
     wb=Workbook(); ws=wb.active; ws.title='Student import'; ws.append(IMPORT_COLUMNS); ws.freeze_panes='A2'; ws.auto_filter.ref=ws.dimensions
     out=io.BytesIO(); wb.save(out); out.seek(0)
-    return send_file(out,as_attachment=True,download_name='kings_gate_student_import_template.xlsx',mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    return send_file(out,as_attachment=True,download_name='his_grace_student_import_template.xlsx',mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/users', methods=['GET','POST'])
 @roles_required('Administrator')
@@ -1336,7 +1322,7 @@ def download_backup():
     data=_dump_sql().encode('utf-8')
     # Ship a portable SQL backup rather than relying on SQLite's newer serialize API.
     audit('backup','database',None,'Administrator downloaded a SQL database backup')
-    return send_file(io.BytesIO(data),as_attachment=True,download_name=f'fr_joseph_connolly_backup_{date.today().isoformat()}.sql',mimetype='application/sql')
+    return send_file(io.BytesIO(data),as_attachment=True,download_name=f'his_grace_academy_backup_{date.today().isoformat()}.sql',mimetype='application/sql')
 
 ALLOWED_DOCUMENT_EXTENSIONS={'pdf','png','jpg','jpeg','docx','xlsx','csv','txt'}
 _SIGNATURES={'pdf':(b'%PDF-',),'png':(b'\x89PNG\r\n\x1a\n',),'jpg':(b'\xff\xd8\xff',),'jpeg':(b'\xff\xd8\xff',),'docx':(b'PK\x03\x04',),'xlsx':(b'PK\x03\x04',)}
@@ -2354,7 +2340,7 @@ def _audience_groups(audience, class_name='', student_id=None):
 
 
 def _group_values(g):
-    return {'student': ' and '.join(g['students']), 'guardian': g['name'], 'class': ', '.join(g['classes']), 'balance': f"GHS {g['balance']:.2f}" if g['balance'] else '', 'school': 'Fr. Joseph Connolly SVD Memorial School'}
+    return {'student': ' and '.join(g['students']), 'guardian': g['name'], 'class': ', '.join(g['classes']), 'balance': f"GHS {g['balance']:.2f}" if g['balance'] else '', 'school': 'His Grace Academy'}
 
 
 def _deliver(channel, targets, subject, template):
@@ -2447,7 +2433,7 @@ def absence_sms(student_id):
     if not INT.status()['sms']['ready']: flash('SMS is not switched on yet.', 'error')
     elif not phone: flash('This student has no valid guardian phone number.', 'error')
     else:
-        text = f"Dear {s['guardian_name'] or 'Parent/Guardian'}, {s['first_name']} {s['last_name']} has been absent from school" + (f" (last on {last})" if _parse_date(last) else '') + ". Please contact the school office. - Fr. Joseph Connolly SVD Memorial School"
+        text = f"Dear {s['guardian_name'] or 'Parent/Guardian'}, {s['first_name']} {s['last_name']} has been absent from school" + (f" (last on {last})" if _parse_date(last) else '') + ". Please contact the school office. - His Grace Academy"
         res = INT.send_sms([(phone, text)])[0]
         _log_message('sms', phone, '', text, res['ok'], res['ref'], res['error'], student_id); db().commit()
         audit('send', 'message', student_id, 'Absence SMS ' + ('sent' if res['ok'] else 'failed'))
@@ -2469,7 +2455,7 @@ def _send_receipt_sms(student, amount, receipt_no):
     try:
         phone = INT.normalize_phone(student['guardian_phone'])
         if not phone or not INT.status()['sms']['ready']: return False
-        text = f"Fr. Joseph Connolly SVD Memorial School: we received GHS {amount:.2f} for {student['first_name']} {student['last_name']}. Receipt {receipt_no}. Thank you."
+        text = f"His Grace Academy: we received GHS {amount:.2f} for {student['first_name']} {student['last_name']}. Receipt {receipt_no}. Thank you."
         res = INT.send_sms([(phone, text)])[0]
         _log_message('sms', phone, '', text, res['ok'], res['ref'], res['error'], student['id']); db().commit()
         return res['ok']
@@ -2505,7 +2491,7 @@ def integrations_test_sms():
     if not phone: flash('Enter a valid Ghana mobile number, for example 0244123456.', 'error')
     else:
         try:
-            text = 'Test message from the Fr. Joseph Connolly SVD Memorial School system.'
+            text = 'Test message from the His Grace Academy system.'
             res = INT.send_sms([(phone, text)])[0]
             _log_message('sms', phone, '', text, res['ok'], res['ref'], res['error']); db().commit()
             flash('Test SMS accepted by the provider.' if res['ok'] else f"The provider refused it: {res['error']}", 'success' if res['ok'] else 'error')
@@ -2518,7 +2504,7 @@ def integrations_test_sms():
 def integrations_test_email():
     to = request.form.get('email', '').strip()
     try:
-        INT.send_email(to, 'Test email from the school system', 'This is a test message from the Fr. Joseph Connolly SVD Memorial School system.')
+        INT.send_email(to, 'Test email from the school system', 'This is a test message from the His Grace Academy system.')
         _log_message('email', to, 'Test email', 'Test message', True); db().commit(); flash('Test email sent.', 'success')
     except INT.IntegrationError as exc:
         _log_message('email', to, 'Test email', 'Test message', False, '', str(exc)); db().commit(); flash(str(exc), 'error')

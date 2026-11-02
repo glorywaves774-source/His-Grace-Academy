@@ -159,3 +159,10 @@ def test_backup_email_needs_password_and_survives_failures(monkeypatch, tmp_path
     assert 'The email was not sent' in A.backup_mail_state().get('last_error', '')
     page = admin().get('/admin/integrations').get_data(as_text=True)
     assert 'Backup by e-mail' in page and 'Correct-Horse' not in page
+
+
+def test_school_classes_and_phone_shown():
+    with A.app.app_context():
+        names = [r['name'] for r in A.db().execute('SELECT name FROM classes ORDER BY id').fetchall()]
+    assert names == ['Creche', 'Nursery', 'KG'] + [f'Primary {i}' for i in range(1, 7)] + ['JHS 1', 'JHS 2', 'JHS 3']
+    assert '024 595 4041' in A.app.test_client().get('/login').get_data(as_text=True)

@@ -1,4 +1,4 @@
-# Install Fr. Joseph Connolly SVD Memorial School as an app
+# Install His Grace Academy as an app
 
 The system can be installed on a phone, tablet or computer so it opens from its own icon, in its own window, like a normal app. It still runs from the school's online address, so everyone always sees the latest records.
 

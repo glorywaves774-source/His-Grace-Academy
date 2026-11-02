@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block title %}Invoice {{ inv.invoice_no }} · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Fee invoice{% endblock %}{% block content %}
+{% extends 'base.html' %}{% block title %}Invoice {{ inv.invoice_no }} · His Grace Academy{% endblock %}{% block page_heading %}Fee invoice{% endblock %}{% block content %}
 <div class="receipt-actions"><a class="btn ghost" href="{{ url_for('invoices') }}">← Invoices</a><button class="btn primary" data-print>Print invoice</button></div>
 <article class="doc-sheet">{% include '_letterhead.html' %}
 <div class="receipt-title"><h3>FEE INVOICE</h3><span>NO: {{ inv.invoice_no }}</span></div>

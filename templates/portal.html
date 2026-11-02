@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}My school portal · Fr. Joseph Connolly SVD Memorial School{% endblock %}
+{% block title %}My school portal · His Grace Academy{% endblock %}
 {% block page_heading %}My school portal{% endblock %}
 {% block content %}
 <div class="panel"><div class="panel-head"><div><h3>{{ student.first_name }} {{ student.last_name }}</h3><p class="muted">{{ student.admission_no }} · {{ student.class_name or 'Class not assigned' }} · {{ portal_role }}</p></div><span class="status-badge {{ 'active' if student.status == 'Active' else 'withdrawn' }}">{{ student.status }}</span></div>{% if portal_role == 'Parent/Guardian' and children|length > 1 %}<form method="get" class="filter-bar"><label>Choose child<select name="student_id" data-autosubmit>{% for child in children %}<option value="{{ child.id }}" {% if child.id == student.id %}selected{% endif %}>{{ child.first_name }} {{ child.last_name }} · {{ child.class_name or 'No class' }}</option>{% endfor %}</select></label><noscript><button class="btn primary">View child</button></noscript></form>{% endif %}<p>{% if portal_role == 'Parent/Guardian' %}This account shows only children explicitly linked by the school.{% else %}This portal is linked to your student record only.{% endif %}</p></div>

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block title %}Dashboard · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Dashboard overview{% endblock %}{% block content %}
+{% extends 'base.html' %}{% block title %}Dashboard · His Grace Academy{% endblock %}{% block page_heading %}Dashboard overview{% endblock %}{% block content %}
 {% set pct = namespace(male=0, female=0, other=0) %}
 {% if active %}{% set pct.male = genders.Male / active * 100 %}{% set pct.female = genders.Female / active * 100 %}{% set pct.other = (genders.Other + genders.Unspecified) / active * 100 %}{% endif %}
 <div class="welcome-row"><div><h2>Good day, {{ current_user.full_name.split(' ')[0] }}</h2><p class="muted">Your school activity overview. Figures are calculated from the database each time this page opens.</p></div><div class="actions">{% if current_user.role in ['Administrator','Headteacher','Admissions Officer'] %}<a class="btn primary" href="{{ url_for('student_new') }}">＋ Register student</a>{% endif %}<a class="btn secondary" href="{{ url_for('students') }}">View directory</a></div></div>
@@ -18,8 +18,8 @@
     <div class="chart-foot">Total shown: {{ class_rows|sum(attribute='n') }} active students{% if unassigned %} · {{ unassigned }} not yet assigned to a class{% endif %}.</div></div>
 
   <div class="panel"><div class="panel-head"><div><h3>Gender distribution</h3><p class="muted">Active students only</p></div></div>
-    <div class="donut-wrap"><div class="donut" role="img" aria-label="Boys {{ genders.Male }}, girls {{ genders.Female }}" style="background:{% if active %}conic-gradient(var(--brand) 0 {{ pct.male }}%, var(--gold) {{ pct.male }}% {{ pct.male + pct.female }}%, var(--neutral) {{ pct.male + pct.female }}% 100%){% else %}#ece7f1{% endif %}"><span><b>{{ active }}</b>active</span></div>
-    <ul class="legend"><li><i style="background:var(--brand)"></i>Boys <b>{{ genders.Male }}</b></li><li><i style="background:var(--gold)"></i>Girls <b>{{ genders.Female }}</b></li><li><i style="background:var(--neutral)"></i>Other / not recorded <b>{{ genders.Other + genders.Unspecified }}</b></li></ul></div></div>
+    <div class="donut-wrap"><div class="donut" role="img" aria-label="Boys {{ genders.Male }}, girls {{ genders.Female }}" style="background:{% if active %}conic-gradient(var(--c-boys) 0 {{ pct.male }}%, var(--c-girls) {{ pct.male }}% {{ pct.male + pct.female }}%, var(--neutral) {{ pct.male + pct.female }}% 100%){% else %}#ebe5df{% endif %}"><span><b>{{ active }}</b>active</span></div>
+    <ul class="legend"><li><i style="background:var(--c-boys)"></i>Boys <b>{{ genders.Male }}</b></li><li><i style="background:var(--c-girls)"></i>Girls <b>{{ genders.Female }}</b></li><li><i style="background:var(--neutral)"></i>Other / not recorded <b>{{ genders.Other + genders.Unspecified }}</b></li></ul></div></div>
 </div>
 
 <div class="dashboard-grid even">
@@ -27,8 +27,16 @@
     {% for label, count, dot in [('Active', active, 'active-dot'), ('Transferred', transferred, 'transfer-dot'), ('Withdrawn', withdrawn, 'withdrawn-dot'), ('Graduated', graduated, 'grad-dot')] %}<div><span class="status-dot {{ dot }}"></span><a href="{{ url_for('students', status=label) }}">{{ label }}</a><b>{{ count }} <small>({{ '%.0f'|format(count / total * 100) if total else 0 }}%)</small></b></div>{% endfor %}</div></div>
 
   <div class="panel"><div class="panel-head"><div><h3>Admission trends</h3><p class="muted">New student records by admission month, last 12 months</p></div></div>
-    {% set tmax = namespace(v=0) %}{% for m in month_rows %}{% if m.n > tmax.v %}{% set tmax.v = m.n %}{% endif %}{% endfor %}
-    <div class="column-chart" role="img" aria-label="Admissions per month for the last 12 months">{% for m in month_rows %}<div class="col"><b>{{ m.n }}</b><div class="col-track"><div class="col-fill" style="height:{{ (m.n / tmax.v * 100) if tmax.v else 0 }}%"></div></div><span>{{ m.label[:3] }}<small>{{ m.label[-2:] }}</small></span></div>{% endfor %}</div>
+    {% set tmax = namespace(v=0, peak=0) %}{% for m in month_rows %}{% if m.n > tmax.v %}{% set tmax.v = m.n %}{% set tmax.peak = loop.index0 %}{% endif %}{% endfor %}
+    {% set ymax = [4, ((tmax.v / 4)|round(0, 'ceil')|int) * 4]|max %}{% set step = 11 %}
+    <svg class="line-chart" viewBox="0 0 620 250" role="img" aria-label="Line chart of admissions per month for the last 12 months">
+      {% for g in range(0, 5) %}{% set gy = 200 - g * 40 %}<line class="lc-grid" x1="44" x2="610" y1="{{ gy }}" y2="{{ gy }}"/><text class="lc-axis" x="36" y="{{ gy + 4 }}" text-anchor="end">{{ (ymax * g / 4)|int }}</text>{% endfor %}
+      {% set pts = namespace(l='', a='44,200') %}{% for m in month_rows %}{% set x = 56 + loop.index0 * 50 %}{% set y = 200 - (m.n / ymax * 160) %}{% set pts.l = pts.l ~ x ~ ',' ~ y ~ ' ' %}{% set pts.a = pts.a ~ ' ' ~ x ~ ',' ~ y %}{% endfor %}
+      <polygon class="lc-area" points="{{ pts.a }} {{ 56 + 11 * 50 }},200"/>
+      <polyline class="lc-line" points="{{ pts.l }}"/>
+      {% for m in month_rows %}{% set x = 56 + loop.index0 * 50 %}{% set y = 200 - (m.n / ymax * 160) %}<g><circle class="lc-dot" cx="{{ x }}" cy="{{ y }}" r="5"/><circle class="lc-hit" cx="{{ x }}" cy="{{ y }}" r="16"><title>{{ m.label }}: {{ m.n }} admission{{ '' if m.n == 1 else 's' }}</title></circle></g>{% if (loop.last or loop.index0 == tmax.peak) and tmax.v %}<text class="lc-val" x="{{ x }}" y="{{ y - 11 }}" text-anchor="middle">{{ m.n }}</text>{% endif %}<text class="lc-axis" x="{{ x }}" y="222" text-anchor="middle">{{ m.label[:3] }}</text><text class="lc-axis lc-year" x="{{ x }}" y="239" text-anchor="middle">{{ m.label[-2:] }}</text>{% endfor %}
+    </svg>
+    <details class="chart-table"><summary>View as table</summary><table><thead><tr><th>Month</th><th>Admissions</th></tr></thead><tbody>{% for m in month_rows %}<tr><td>{{ m.label }}</td><td>{{ m.n }}</td></tr>{% endfor %}</tbody></table></details>
     {% if not tmax.v %}<p class="chart-foot">No admissions recorded in this period.</p>{% endif %}</div>
 </div>
 

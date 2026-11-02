@@ -1,8 +1,10 @@
-# Fr. Joseph Connolly SVD Memorial School Management System
+# His Grace Academy Management System
 
-Official name: Fr. Joseph Connolly SVD Memorial School  
-Slogan: Faith • Knowledge • Service  
+Official name: His Grace Academy  
+Motto: With Christ Success. Slogan: Learn, Grow, Excel!
+Tagline: Raising Future Leaders in Knowledge, Character and Service  
 Location reference: Saboba, Northern Region, Ghana  
+Telephone: 024 595 4041  
 Currency: Ghana cedi (GHS)
 
 This repository contains a Flask application backed by SQLite. It uses a shared database for student records, fee receipts, accounts, audit events, and the integrated operational registers. It is a staged implementation. Do not treat it as a production-ready release until the test and deployment checklist passes.
@@ -11,7 +13,7 @@ This repository contains a Flask application backed by SQLite. It uses a shared 
 
 1. Install Python 3.10 or newer.
 2. Extract this ZIP.
-3. Open PowerShell in the `kings_gate_school` folder.
+3. Open PowerShell in the `His_Grace_Academy_School_System` folder.
 4. Run:
 
 ```powershell
@@ -54,7 +56,7 @@ The account must change its password on first login. Change it immediately and n
 - Login with password hashing, account lockout, session expiry, CSRF checks on POST, security headers and forced initial password rotation.
 - Server-side role checks and class-scoped access for class/subject teachers on supported registers.
 - Student registration, unique admission number generation, guardian/emergency details, class assignment, profile viewing/editing, search and filters.
-- Classes: Daycare, KG 1, KG 2, Primary 1 to 6, and JHS 1 to 3.
+- Classes: Creche, Nursery, KG, Primary 1 to 6, and JHS 1 to 3 (change names or add classes under Classes).
 - Database-derived student dashboard summaries, class/gender/status charts and recent records.
 - Student directory CSV, XLSX and PDF exports. CSV formula prefixes are protected.
 - CSV/XLSX import with preview, row validation, duplicate checks and confirmation.
@@ -77,7 +79,7 @@ The account must change its password on first login. Change it immediately and n
 
 This version was run for the first time: `pytest -q` passes (26 tests) and every page was loaded as Administrator without error. Role-by-role browser testing, deployment, backup restoration and security review remain outstanding; see `TEST_REPORT.md`.
 
-Admission, receipt and invoice numbers start with the school code (default `FJC`). Change it with the `SCHOOL_CODE` environment setting before the first student is registered.
+Admission, receipt and invoice numbers start with the school code (default `HGA`). Change it with the `SCHOOL_CODE` environment setting before the first student is registered.
 
 ## Version 4: SMS, email and mobile money
 See INTEGRATIONS_SETUP.md. Off by default; nothing is sent until the settings are added.

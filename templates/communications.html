@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block title %}Send messages · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Send messages{% endblock %}{% block content %}
+{% extends 'base.html' %}{% block title %}Send messages · His Grace Academy{% endblock %}{% block page_heading %}Send messages{% endblock %}{% block content %}
 {% if not sms_ready and not email_ready %}<div class="alert warning">Neither SMS nor email is switched on yet. An administrator can see what is missing under Integrations.</div>{% endif %}
 <form method="post" class="panel form-panel narrow"><input type="hidden" name="_csrf" value="{{ csrf_token }}">
 <div class="form-grid">

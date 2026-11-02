@@ -1,4 +1,4 @@
-"""Smoke and security tests for Fr. Joseph Connolly SVD Memorial School Management System.
+"""Smoke and security tests for His Grace Academy Management System.
 Run with: pytest -q
 """
 import os
@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-DB_FILE = tempfile.mktemp(prefix='kings_gate_test_', suffix='.sqlite3')
+DB_FILE = tempfile.mktemp(prefix='his_grace_test_', suffix='.sqlite3')
 os.environ['SCHOOL_DB'] = DB_FILE
 os.environ['SECRET_KEY'] = 'test-only-secret-key-not-for-deployment'
 
@@ -422,8 +422,8 @@ def test_101_student_form_keeps_input_after_a_validation_error():
 
 def test_102_login_page_shows_the_whole_crest_and_layout_styles_exist():
     page = school_app.app.test_client().get('/login').data.decode()
-    assert 'school-crest.png' in page and 'school-poster' not in page and 'Memorial School<' in page
-    assert 'Memorial School<br>International School' not in page
+    assert 'school-crest.png' in page and 'school-poster' not in page and 'His Grace' in page and 'Academy' in page
+    assert 'Joseph' not in page and 'Kings Gate' not in page
     css = (Path(__file__).resolve().parents[1] / 'static' / 'style.css').read_text(encoding='utf-8')
     for selector in ('.filter-bar', '.narrow', '.login-crest'):
         assert selector in css
@@ -437,7 +437,7 @@ def test_103_dashboard_attendance_and_fees_are_accurate_and_capped_at_today():
         sid = conn.execute("SELECT id FROM students WHERE status='Active' LIMIT 1").fetchone()['id']
         for n, (d, amt) in enumerate([(today, 40), (today.replace(day=1), 10), (today + timedelta(days=3), 999)]):
             conn.execute("INSERT INTO fees(receipt_no,student_id,amount,payment_date,payment_method,purpose,received_by) VALUES(?,?,?,?,?,?,?)",
-                         (f'FJC-T103-{n}', sid, amt, d.isoformat(), 'Cash', 'Test', 'Test'))
+                         (f'HGA-T103-{n}', sid, amt, d.isoformat(), 'Cash', 'Test', 'Test'))
         for status in ('Present', 'Late', 'Absent'):
             payload = json.dumps({'student_id': str(sid), 'class_name': 'Primary 1', 'event_date': today.isoformat(), 'attendance_status': status})
             conn.execute("INSERT INTO school_records(module_key,title,payload_json,student_id,class_name,event_date,status) VALUES('attendance','Student Attendance',?,?,?,?,?)",
@@ -498,10 +498,10 @@ def test_104_teacher_dashboard_hides_fees_and_scopes_attendance():
 
 def test_105_generated_numbers_use_the_school_code_not_another_schools_initials():
     with school_app.app.app_context():
-        assert school_app.SCHOOL_CODE == 'FJC'
-        assert school_app.make_admission_no().startswith('FJC-')
+        assert school_app.SCHOOL_CODE == 'HGA'
+        assert school_app.make_admission_no().startswith('HGA-')
     c = admin_client()
-    assert b'value="FJC-' in c.get('/students/new').data
+    assert b'value="HGA-' in c.get('/students/new').data
 
 
 def test_106_assets_are_light_and_free_of_other_school_branding():
@@ -510,5 +510,5 @@ def test_106_assets_are_light_and_free_of_other_school_branding():
         assert (root / 'static' / name).stat().st_size < 300_000
     for p in list((root / 'templates').glob('*.html')) + [root / 'static' / 'style.css', root / 'app.py']:
         text = p.read_text(encoding='utf-8')
-        assert 'Kings Gate' not in text and 'KGI-' not in text and 'KINGS GATE' not in text, p.name
+        assert 'Kings Gate' not in text and 'KGI-' not in text and 'KINGS GATE' not in text and 'Connolly' not in text and 'FJC-' not in text and 'CONNOLLY' not in text, p.name
     assert not (root / 'static' / 'school-poster.jpg').exists()

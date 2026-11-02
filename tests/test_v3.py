@@ -266,7 +266,7 @@ def test_09_admission_history_and_letter():
 def test_10_backup_restore_round_trip_and_safeguards():
     a = admin()
     backup = a.get('/admin/backup'); assert backup.status_code == 200 and b'CREATE TABLE' in backup.data
-    assert 'fr_joseph_connolly_backup_' in backup.headers['Content-Disposition']
+    assert 'his_grace_academy_backup_' in backup.headers['Content-Disposition']
     add_student('V3-RESTORE-ME', 'Temp', 'Student', 'Primary 4')
     # wrong confirmation, wrong type, garbage, non-admin
     assert b'RESTORE in the confirmation' in a.post('/admin/restore', {'confirm': 'no', 'backup_file': (io.BytesIO(backup.data), 'b.sql')}, content_type='multipart/form-data', follow_redirects=True).data

@@ -19,7 +19,7 @@ def teardown_module():
 def configure(monkeypatch, sms=True, mail=True, momo=True):
     for k in ('SMS_PROVIDER','ARKESEL_API_KEY','SMS_SENDER_ID','SMTP_HOST','SMTP_USER','SMTP_PASSWORD','MOMO_PROVIDER','PAYSTACK_SECRET_KEY','MOMO_FALLBACK_EMAIL'):
         monkeypatch.delenv(k, raising=False)
-    if sms: monkeypatch.setenv('SMS_PROVIDER','arkesel'); monkeypatch.setenv('ARKESEL_API_KEY','ark-secret'); monkeypatch.setenv('SMS_SENDER_ID','FJCSCHOOL')
+    if sms: monkeypatch.setenv('SMS_PROVIDER','arkesel'); monkeypatch.setenv('ARKESEL_API_KEY','ark-secret'); monkeypatch.setenv('SMS_SENDER_ID','HISGRACE')
     if mail: monkeypatch.setenv('SMTP_HOST','smtp.example.org'); monkeypatch.setenv('SMTP_USER','u@example.org'); monkeypatch.setenv('SMTP_PASSWORD','pw')
     if momo: monkeypatch.setenv('MOMO_PROVIDER','paystack'); monkeypatch.setenv('PAYSTACK_SECRET_KEY',KEY); monkeypatch.setenv('MOMO_FALLBACK_EMAIL','school@example.org')
     SENT.clear()
@@ -63,7 +63,7 @@ def test_off_by_default_and_status_hides_secrets(monkeypatch):
     a = admin(); assert a.get('/communications').status_code == 200
     configure(monkeypatch)
     page = a.get('/admin/integrations').get_data(as_text=True)
-    assert 'ark-secret' not in page and KEY not in page and 'FJCSCHOOL' in page and '/webhooks/paystack' in page
+    assert 'ark-secret' not in page and KEY not in page and 'HISGRACE' in page and '/webhooks/paystack' in page
 
 
 def test_roles_for_new_pages(monkeypatch):
@@ -225,20 +225,3 @@ def test_absence_sms_respects_class_scope(monkeypatch):
     add_user('v4_t3', 'Class Teacher', 'JHS 1'); t = Agent('v4_t3')
     assert t.post(f'/reports/absence-alerts/{s}/sms', {}).status_code == 403
     assert admin().post(f'/reports/absence-alerts/{s}/sms', {'last': TODAY.isoformat()}).status_code == 302 and SENT
-
-
-def test_class_list_and_old_names_renamed():
-    with A.app.app_context():
-        c = A.db()
-        c.execute("INSERT OR IGNORE INTO classes(name) VALUES('Nursery')")
-        cid = c.execute("SELECT id FROM classes WHERE name='Nursery'").fetchone()['id']
-        c.execute("UPDATE classes SET name='Nursery' WHERE id=?", (cid,)); c.execute("DELETE FROM classes WHERE name='KG 1' AND id<>?", (cid,))
-        c.execute("INSERT INTO school_records(module_key,title,payload_json,class_name) VALUES('timetable','t','{\"class_name\": \"Nursery\"}','Nursery')")
-        c.commit()
-        A.init_db()
-        names = [r['name'] for r in c.execute('SELECT name FROM classes ORDER BY id').fetchall()]
-        assert names[:3] == ['Daycare', 'KG 1', 'KG 2'] or {'Daycare', 'KG 1', 'KG 2'} <= set(names)
-        assert 'Nursery' not in names and 'Creche' not in names and 'Kindergarten' not in names
-        row = c.execute("SELECT class_name,payload_json FROM school_records WHERE title='t' ORDER BY id DESC").fetchone()
-        assert row['class_name'] == 'KG 1' and 'KG 1' in row['payload_json']
-        assert len(names) == 12

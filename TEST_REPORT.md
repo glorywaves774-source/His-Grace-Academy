@@ -1,3 +1,7 @@
+# His Grace Academy run
+
+59 automated tests pass (`pip install -r requirements-dev.txt` then `pytest -q`). Live SMS, e-mail and mobile-money providers are untested.
+
 # Test report
 
 ## Version 3 (current)
@@ -92,7 +96,7 @@ Static checks completed: Python compilation for `app.py` and `tests/test_app.py`
 - Live HTTP, database migration, authentication, role isolation, image upload/display, and Render persistence remain unverified. Install requirements and run the complete test suite in a staging environment before production use.
 
 
-## Version 2 run (Fr. Joseph Connolly SVD Memorial School, executed with Flask 3.1 / Python 3)
+## Version 2 run (His Grace Academy, executed with Flask 3.1 / Python 3)
 - `pytest -q`: 26 passed.
 - Crawled every reachable page as Administrator (309 URLs): no 4xx/5xx responses.
 - CSV import preview and confirm, XLSX/PDF/CSV exports and register CSV export: working.

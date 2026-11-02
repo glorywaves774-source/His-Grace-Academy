@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ cfg.label }} · Fr. Joseph Connolly SVD Memorial School{% endblock %}
+{% block title %}{{ cfg.label }} · His Grace Academy{% endblock %}
 {% block page_heading %}{{ cfg.label }}{% endblock %}
 {% block content %}
 <div class="page-intro"><div><p>{{ cfg.description }}</p></div><div class="actions">{% if key=='leave' %}<a class="button button-secondary" href="{{ url_for('leave_balances') }}">Leave balances</a>{% endif %}{% if key=='payroll' %}<a class="button button-secondary" href="{{ url_for('payroll_summary') }}">Monthly summary</a>{% endif %}{% if key=='fee-structure' %}<a class="button button-secondary" href="{{ url_for('fees_generate') }}">Generate invoices</a>{% endif %}{% if key=='library' %}<a class="button button-secondary" href="{{ url_for('library_overdue') }}">Overdue books</a>{% endif %}{% if key=='timetable' %}<a class="button button-secondary" href="{{ url_for('timetable_print') }}">Print timetable</a>{% endif %}<a class="button button-secondary" href="{{ url_for('module_export',key=key) }}">Export CSV</a><a class="button" href="{{ url_for('module_new',key=key) }}">+ Add record</a></div></div>

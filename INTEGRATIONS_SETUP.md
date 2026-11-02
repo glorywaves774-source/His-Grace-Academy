@@ -5,7 +5,7 @@ Open **Integrations** (Administrator menu) to see what is ready and to send a te
 
 ## 1. SMS (Arkesel)
 1. Create an Arkesel account and copy the **API key** (v2).
-2. Register a **sender name** of up to 11 letters/digits (e.g. `FJCSCHOOL`) and wait for approval.
+2. Register a **sender name** of up to 11 letters/digits (e.g. `HISGRACE`) and wait for approval.
 3. Set `SMS_PROVIDER=arkesel`, `ARKESEL_API_KEY`, `SMS_SENDER_ID`.
 4. Integrations → send a test SMS to your own phone.
 
@@ -22,7 +22,7 @@ How a payment works: a parent picks an unpaid invoice in the portal and enters t
 
 ## 4. Daily backup by e-mail (encrypted)
 Once SMTP (section 2) works, add two settings:
-- `BACKUP_EMAIL_TO=glorywaves774@gmail.com`
+- `BACKUP_EMAIL_TO=office@your-school-email.example`
 - `BACKUP_ZIP_PASSWORD=` a long passphrase (12+ characters). **Write it down somewhere safe: without it the backups cannot be opened, and it is not stored anywhere in the system.**
 
 Each day the system makes its backup and e-mails it as an AES-256 password-protected zip. Unencrypted backups are never e-mailed: without the password setting, nothing is sent. Open the zip with 7-Zip or WinZip. Integrations -> "Backup by e-mail" shows the last send and any problem, and "Send a backup now" tests it. Backups over 20 MB cannot be e-mailed (Gmail's limit); the page then tells you to download one manually.

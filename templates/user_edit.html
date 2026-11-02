@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block title %}Edit user · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Edit user account{% endblock %}{% block content %}
+{% extends 'base.html' %}{% block title %}Edit user · His Grace Academy{% endblock %}{% block page_heading %}Edit user account{% endblock %}{% block content %}
 {% set cur = cur_class %}
 <div class="form-intro"><p class="muted">Account: <b>{{ u.username }}</b> · {{ u.role }}</p><a class="btn ghost" href="{{ url_for('users') }}">← Back to users</a></div>
 <form method="post" class="panel form-panel"><input type="hidden" name="_csrf" value="{{ csrf_token }}"><div class="form-section"><h3>Account details</h3><div class="form-grid">

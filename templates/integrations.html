@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% block title %}Integrations · Fr. Joseph Connolly SVD Memorial School{% endblock %}{% block page_heading %}Integrations{% endblock %}{% block content %}
+{% extends 'base.html' %}{% block title %}Integrations · His Grace Academy{% endblock %}{% block page_heading %}Integrations{% endblock %}{% block content %}
 <div class="panel"><p class="muted">SMS, email and mobile money are switched on by the settings file on the server (see INTEGRATIONS_SETUP.md). Passwords and keys are never shown here or stored in the database.</p></div>
 <div class="detail-grid">
 <section class="panel"><div class="panel-head"><div><h3>SMS · {{ st.sms.provider }}</h3></div><span class="status-badge {{ 'active' if st.sms.ready else 'withdrawn' }}">{{ 'Ready' if st.sms.ready else 'Not set up' }}</span></div>
